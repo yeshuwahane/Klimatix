@@ -10,6 +10,7 @@ fun CommonModule () = NetworkModule() + module {
         WeatherRepositoryImpl(get())
     }
 
+
     single {
         MainViewModel(get())
     }

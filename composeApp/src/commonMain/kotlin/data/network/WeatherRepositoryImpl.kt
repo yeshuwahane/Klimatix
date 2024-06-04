@@ -7,45 +7,27 @@ import data.Constant
 import data.model.CityWeatherModel
 import data.utils.DataResource
 import data.utils.apiCall
+import domain.WeatherRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
-import io.ktor.client.request.url
 
 class WeatherRepositoryImpl(
     private val networkClient:HttpClient
-):WeatherRepository {
-
+): WeatherRepository {
     val settings: Settings = Settings()
-
-    override suspend fun getWeatherByCity(
-    ): DataResource<CityWeatherModel> {
+    override suspend fun getCityWeather(): DataResource<CityWeatherModel> {
         return apiCall {
             val cityName = getCity()
-            networkClient.get(Constant.CITY_WEATHER_URL){
-                url{
-                    parameters.append("q",cityName)
-                    parameters.append("appid",Constant.API_KEY)
-                    parameters.append("units","metric")
+                networkClient.get(Constant.CURRENT_WEATHER_URL){
+                    url {
+                        parameters.append("key",Constant.API_KEY)
+                        parameters.append("q",cityName)
+                        parameters.append("aqi","yes")
+                    }
                 }
-
-            }
         }
     }
 
-    override suspend fun getWeatherByCoordinated(
-        long: String,
-        lat: String
-    ): DataResource<CityWeatherModel> {
-        return apiCall {
-            networkClient.get(Constant.CITY_WEATHER_URL) {
-                url{
-                    parameters.append("lat",lat)
-                    parameters.append("lon",long)
-                    parameters.append("appid",Constant.API_KEY)
-                }
-            }
-        }
-    }
 
     override suspend fun setCity(city: String) {
         settings.set(Constant.CITY,city)
