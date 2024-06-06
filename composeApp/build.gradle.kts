@@ -57,6 +57,7 @@ kotlin {
 
             //koin
             implementation(libs.koin.core)
+            implementation(libs.koin.compose)
 
 
             //Kamel
@@ -77,6 +78,9 @@ kotlin {
 
             // Koin integration
             implementation("cafe.adriel.voyager:voyager-koin:$voyagerVersion")
+
+            //time
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
 
         }

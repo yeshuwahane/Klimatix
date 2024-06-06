@@ -17,7 +17,7 @@ import org.koin.dsl.module
 
 
 @OptIn(ExperimentalSerializationApi::class)
-fun NetworkModule () = module {
+fun networkModule() = module {
     single {
         HttpClient {
             defaultRequest {

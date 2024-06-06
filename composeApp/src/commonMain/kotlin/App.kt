@@ -1,20 +1,25 @@
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.navigator.Navigator
-import di.initKoin
+import di.appModule
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.KoinApplication
 import presentation.MainScreen
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 @Preview
 fun App() {
-    initKoin {
+    KoinApplication(
+        application = {
+            modules(appModule())
+        }
+    ){
+        MaterialTheme {
+            Navigator(MainScreen())
+        }
+    }
 
-    }
-    MaterialTheme {
-        Navigator(MainScreen())
-    }
 }
 

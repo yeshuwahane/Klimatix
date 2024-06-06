@@ -3,13 +3,18 @@ package presentation
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import data.network.WeatherRepositoryImpl
+import data.utils.DataResource
 import io.github.aakira.napier.Napier
 import io.ktor.util.date.GMTDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.time.TimeSource
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class MainViewModel(
     private val weatherRepositoryImpl: WeatherRepositoryImpl
@@ -17,6 +22,9 @@ class MainViewModel(
 
    private val _uiState = MutableStateFlow(WeatherUiState())
     val uiState = _uiState.asStateFlow()
+    private val _forecastUiState = MutableStateFlow(WeatherForecastUiState())
+    val forecastUiState = _forecastUiState.asStateFlow()
+
 
     fun getWeather() {
         screenModelScope.launch {
@@ -52,6 +60,53 @@ class MainViewModel(
         }
     }
 
+    fun getForecast(){
+        _forecastUiState.update {
+            it.copy(
+                weatherForecastResource = DataResource.loading()
+            )
+        }
+        screenModelScope.launch {
+            val response = weatherRepositoryImpl.getCityForecast()
+
+            if (response.isSuccess() && response.data?.forecast?.forecastday?.isNotEmpty() == true){
+                _forecastUiState.update {
+                    it.copy(
+                        weatherForecastResource = response
+                    )
+                }
+                _uiState.update {
+                    it.copy(
+                        weatherCondition = response.data.current.condition.text,
+                        iconCode = response.data.current.condition.icon,
+                        temp = response.data.current.tempC.toString()+"°",
+                        cityName = response.data.location.name,
+                        uvIndex = response.data.current.uv,
+                        feelslikeTemp = response.data.current.feelslikeC.toString()+"°",
+                        humidity = response.data.current.humidity.toString(),
+                        windDirection = response.data.current.windDir,
+                        windKph = response.data.current.windKph.toString(),
+                        isDay = response.data.current.isDay,
+                        last_updated = response.data.current.lastUpdated,
+                        pressure_mb = response.data.current.pressureMb,
+                        visibilityKm = response.data.current.visKm,
+                        airQualityIndex = response.data.current.airQuality.usEpaIndex,
+                    )
+                }
+            }else{
+                _forecastUiState.update {
+                    it.copy(
+                        weatherForecastResource = DataResource.error(Throwable("No Connection, please Restart when connection in back"))
+                    )
+                }
+            }
+
+        }
+
+    }
+
+
+
     fun setCity(city: String) {
         screenModelScope.launch {
             weatherRepositoryImpl.setCity(city)
@@ -75,6 +130,18 @@ class MainViewModel(
             else -> "Invalid hour"
         }
     }
+
+    fun getLocalTime():Int{
+        val now: Instant = Clock.System.now()
+        val thisTime: LocalTime = now.toLocalDateTime(TimeZone.currentSystemDefault()).time
+        val currentHour = thisTime.hour
+
+        Napier.d("Current Hour: $currentHour")
+
+        return currentHour
+    }
+
+
 
 
 }

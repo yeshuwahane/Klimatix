@@ -1,9 +1,12 @@
 package presentation
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.InfiniteRepeatableSpec
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,12 +15,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
@@ -26,82 +30,98 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Card
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import data.Constant
+import data.model.forecast.CityForecastModel
+import data.utils.DataResource
 import io.github.aakira.napier.Napier
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
-import org.jetbrains.compose.resources.painterResource
 import presentation.utils.ColorManager
 import presentation.utils.toDp
 import presentation.utils.toSp
-import weather.composeapp.generated.resources.Res
-import weather.composeapp.generated.resources.clouds
-import weather.composeapp.generated.resources.rain
-import weather.composeapp.generated.resources.sunny
 
 class MainScreen : Screen {
     @Composable
     override fun Content() {
         val mainViewModel = getScreenModel<MainViewModel>()
         val uiState = mainViewModel.uiState.collectAsState()
-        val temp = uiState.value.temp
-        val weatherName = uiState.value.weatherCondition
-        val locationName = uiState.value.cityName
-        val weatherIcon = uiState.value.iconCode
+        val forecastUiState = mainViewModel.forecastUiState.collectAsState()
+        val currentHour = mainViewModel.getLocalTime()
 
-        val sunIcon ="https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/cdn.weatherapi.com/weather/64x64/day/113.png"
-        val windIcon = "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/air.png"
-        val humidityIcon = "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/drop.png"
-        val airIcon = "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/breath.png"
-        val pressureIcon = "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/arrows.png"
-        val visibilityIcon = "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/visibility.png"
+        val snackbarHostState = remember { SnackbarHostState() }
+        val scope = rememberCoroutineScope()
+
+
+        val sunIcon =
+            "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/star.png"
+        val windIcon =
+            "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/wind.png"
+        val humidityIcon =
+            "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/drop.png"
+        val airIcon =
+            "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/breath.png"
+        val pressureIcon =
+            "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/arrows.png"
+        val visibilityIcon =
+            "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/visibility.png"
 
 
 
         LaunchedEffect(Unit) {
-            mainViewModel.getWeather()
+//            mainViewModel.getWeather()
+            mainViewModel.getForecast()
+
         }
 
-        Box {
+
             Scaffold(
-                backgroundColor = Color.Transparent,   // Make the background transparent
+                backgroundColor = Color.Transparent,   // Make the background transparent,
+                snackbarHost = {
+                    SnackbarHost(snackbarHostState)
+                }
 
             ) { paddingValues ->
 
@@ -110,10 +130,6 @@ class MainScreen : Screen {
                     onSearchCTA = {
                         mainViewModel.setCity(it)
                     },
-                    temp = temp,
-                    weatherIcon = weatherIcon,
-                    weatherName = weatherName,
-                    tempFeelLike = uiState.value.feelslikeTemp,
                     uvIndex = uiState.value.uvIndex,
                     sunIcon = sunIcon,
                     windIcon = windIcon,
@@ -127,153 +143,289 @@ class MainScreen : Screen {
                     visibilityIcon = visibilityIcon,
                     visibilityKm = uiState.value.visibilityKm,
                     locationName = uiState.value.cityName,
-                    dayStatus = uiState.value.dayStatus
+                    dayStatus = mainViewModel.getTimeOfDay(currentHour),
+                    forecastDataResource = forecastUiState.value.weatherForecastResource,
+                    onSnackBarCTA = {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(it)
+                        }
+                    },
+                    onRefreshCTA = {
+                        mainViewModel.getForecast()
+                    },
+                    currentHour = currentHour
                 )
 
             }
-        }
 
 
     }
 
+    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     fun WeatherStaticCompose(
         paddingValues: PaddingValues,
         onSearchCTA: (String) -> Unit,
-        locationName:String,
-        temp: String,
-        weatherIcon: String,
-        weatherName: String,
-        tempFeelLike: String,
+        locationName: String,
         uvIndex: Double,
-        sunIcon:String,
-        windIcon:String,
-        windSpeed:String,
-        humidityIcon:String,
-        humidityPercent:String,
-        airIndex:Int,
-        airIcon:String,
-        pressureIcon:String,
-        pressureMb:Double,
-        visibilityIcon:String,
-        visibilityKm:Double,
-        dayStatus:String
+        sunIcon: String,
+        windIcon: String,
+        windSpeed: String,
+        humidityIcon: String,
+        humidityPercent: String,
+        airIndex: Int,
+        airIcon: String,
+        pressureIcon: String,
+        pressureMb: Double,
+        visibilityIcon: String,
+        visibilityKm: Double,
+        dayStatus: String,
+        currentHour:Int,
+        forecastDataResource: DataResource<CityForecastModel>,
+        onSnackBarCTA: (String) -> Unit,
+        onRefreshCTA: () -> Unit,
     ) {
         var cityName by remember { mutableStateOf(TextFieldValue("")) }
         val focusManager = LocalFocusManager.current
         var showTextFeild by remember { mutableStateOf(false) }
 
-        val uvItemData =WeatherDetailCardItemData(sunIcon, getUVHarmfulness(uvIndex), "UV Index")
-        val windItemData =WeatherDetailCardItemData(windIcon, windSpeed+"km/h", "Wind")
-        val humidityItemData =WeatherDetailCardItemData(humidityIcon, "$humidityPercent%", "Humidity")
-        val airIndexItemData =WeatherDetailCardItemData(airIcon, getAirQuality(airIndex), "Air Index")
-        val pressureIndexItemData =WeatherDetailCardItemData(pressureIcon, "$pressureMb MB", "Pressure")
-        val visibilityIndexItemData =WeatherDetailCardItemData(visibilityIcon, "$visibilityKm KM", "Visibility")
+        val refreshing by remember { mutableStateOf(false) }
 
+        val refreshState = rememberPullRefreshState(refreshing, onRefresh = {
+            Napier.d( "Pull to refresh() ")
+            onRefreshCTA.invoke()
+        })
 
+        val uvItemData = WeatherDetailCardItemData(sunIcon, getUVHarmfulness(uvIndex), "UV Index")
+        val windItemData = WeatherDetailCardItemData(windIcon, windSpeed + "km/h", "Wind")
+        val humidityItemData =
+            WeatherDetailCardItemData(humidityIcon, "$humidityPercent%", "Humidity")
+        val airIndexItemData =
+            WeatherDetailCardItemData(airIcon, getAirQuality(airIndex), "Air Index")
+        val pressureIndexItemData =
+            WeatherDetailCardItemData(pressureIcon, "$pressureMb MB", "Pressure")
+        val visibilityIndexItemData =
+            WeatherDetailCardItemData(visibilityIcon, "$visibilityKm KM", "Visibility")
+
+        val infiniteTransition = rememberInfiniteTransition()
+        val vibration by infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 10f,
+            animationSpec = InfiniteRepeatableSpec(
+                animation = tween(500),
+                repeatMode = RepeatMode.Reverse
+            )
+        )
 
         Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .systemBarsPadding()
+                .pullRefresh(refreshState)
+                .navigationBarsPadding(),
         ) {
 
-            Row(modifier = Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.SpaceBetween){
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(10.dp).pullRefresh(refreshState),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
 
-                Text("Good $dayStatus",
+                Text(
+                    text = "Good $dayStatus",
+                    modifier = Modifier.padding(10.dp),
+                    fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 24.dp.toSp())
+                    fontSize = 24.dp.toSp()
+                )
                 Row(
-                    modifier = Modifier.border(2.dp,ColorManager.Blue, RoundedCornerShape(8.dp)).padding(10.dp).clickable {
-                        showTextFeild = !showTextFeild
-                    }
+                    modifier = Modifier.border(2.dp, ColorManager.Blue, RoundedCornerShape(8.dp))
+                        .padding(10.dp).clickable {
+                            showTextFeild = !showTextFeild
+                        }
                 ) {
                     Icon(Icons.Default.LocationOn, contentDescription = "")
                     Text(locationName, color = ColorManager.Blue)
                 }
             }
 
-            AnimatedVisibility(showTextFeild){
+            AnimatedVisibility(showTextFeild) {
                 OutlinedTextField(
-                value = cityName,
-                label = { Text(text = "Search City") },
-                onValueChange = {
-                    cityName = it
-                },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, "")
-                },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
-                maxLines = 1,
-                keyboardOptions = KeyboardOptions(
-                    autoCorrect = true,
-                    imeAction = ImeAction.Go,
-                    keyboardType = KeyboardType.Text
-                ),
-                keyboardActions = KeyboardActions(
-                    onGo = {
-                        onSearchCTA.invoke(cityName.text)
-                        focusManager.clearFocus()
-                        showTextFeild = false
-                    }
+                    value = cityName,
+                    label = { Text(text = "Search City") },
+                    onValueChange = {
+                        cityName = it
+                    },
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, "")
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
+                    maxLines = 1,
+                    keyboardOptions = KeyboardOptions(
+                        autoCorrect = true,
+                        imeAction = ImeAction.Go,
+                        keyboardType = KeyboardType.Text
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onGo = {
+                            onSearchCTA.invoke(cityName.text)
+                            focusManager.clearFocus()
+                            showTextFeild = false
+                        }
+                    )
                 )
-            )
             }
 
-
-
-            Box(
-                contentAlignment = Alignment.TopCenter, modifier = Modifier
-                    .fillMaxWidth()
-//                    .wrapContentHeight()
-            ) {
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(10.dp),
-                    shape = MaterialTheme.shapes.large
+            if (forecastDataResource.isSuccess() && forecastDataResource.data?.current?.condition?.text?.isNotEmpty() == true){
+                Box(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                        .shadow(8.dp, RectangleShape)
+                        .clip(RectangleShape)
+                        .background(color = ColorManager.Blue, shape = RoundedCornerShape(10.dp))
+                        .padding(16.dp)
                 ) {
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(10.dp),
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = temp,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 26.dp.toSp()
-                            )
-
-                            KamelImage(
-                                asyncPainterResource(Constant.IMG_BASE_URL + weatherIcon),
-                                "",
-                                modifier = Modifier.size(74.dp),
-                                contentScale = ContentScale.Crop
-                            )
-
-                            Text(
-                                text = weatherName,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 26.dp.toSp()
-                            )
-
-                        }
-//                            Text(text = "Feel Like $tempFeelLike /")
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            text = forecastDataResource.data.current.tempC.toString() +"°",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 30.dp.toSp()
+                        )
+                        Text(
+                            text = forecastDataResource.data.current.condition.text,
+                            color = ColorManager.WhiteBlack,
+                            fontFamily = FontFamily.SansSerif,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.dp.toSp()
+                        )
                     }
+                    KamelImage(
+                        asyncPainterResource(Constant.IMG_BASE_URL + forecastDataResource.data.current.condition.icon),
+                        "",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .padding(horizontal = 10.dp)
+                            .graphicsLayer {
+                                translationX = vibration
+                            }
+                            .align(Alignment.TopEnd),
+                        contentScale = ContentScale.Crop
+                    )
+
                 }
+            }else if (forecastDataResource.isLoading()){
+                WeatherCardShimmer()
+            }else if (forecastDataResource.isError()){
+                onSnackBarCTA.invoke(forecastDataResource.error?.message.toString())
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
+            if (forecastDataResource.isSuccess() && forecastDataResource.data?.forecast?.forecastday?.isNotEmpty() == true){
+                LazyRow(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(forecastDataResource.data.forecast.forecastday.get(0).hour) { hourForecast ->
+
+                            WeatherCard(
+                                time = hourForecast.time.split(" ")[1],
+                                weatherIcon = hourForecast.condition.icon,
+                                temp = hourForecast.tempC.toString(),
+                                weatherCondition = hourForecast.condition.text,
+                                )
+
+
+
+
+
+                    }
+
+                }
+            } else if (forecastDataResource.isLoading()){
+
+                LazyRow(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(10){
+                        ForecastItemsShimmer()
+                    }
+
+                }
+
+            }
+
+
+
+
+
+            Spacer(modifier = Modifier.weight(1f))
+
             WeatherDetailCard(
-                weatherDetailItemDataList1 = listOf(uvItemData,windItemData,humidityItemData),
-                weatherDetailItemDataList2 = listOf(airIndexItemData,pressureIndexItemData,visibilityIndexItemData)
+                weatherDetailItemDataList1 = listOf(uvItemData, windItemData, humidityItemData),
+                weatherDetailItemDataList2 = listOf(
+                    airIndexItemData,
+                    pressureIndexItemData,
+                    visibilityIndexItemData
+                )
             )
 
         }
     }
 
     @Composable
-    fun WeatherDetailCard(weatherDetailItemDataList1: List<WeatherDetailCardItemData>,weatherDetailItemDataList2: List<WeatherDetailCardItemData>) {
+    fun WeatherCard(time: String, weatherIcon: String,temp: String,weatherCondition: String) {
+        val infiniteTransition = rememberInfiniteTransition()
+        val vibration by infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 10f,
+            animationSpec = InfiniteRepeatableSpec(
+                animation = tween(1000),
+                repeatMode = RepeatMode.Reverse
+            )
+        )
+        Column(
+            modifier = Modifier
+                .size(120.dp, 200.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .border(width = 1.dp, color = ColorManager.Blue, shape = RoundedCornerShape(16.dp))
+                .background(Color.White)
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Text(time, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            KamelImage(
+                asyncPainterResource(Constant.IMG_BASE_URL + weatherIcon),
+                "",
+                modifier = Modifier
+                    .size(80.dp)
+                    .graphicsLayer {
+                        translationX = vibration
+                    }
+                    .padding(horizontal = 10.dp),
+                contentScale = ContentScale.Crop
+            )
+            Text("$temp°", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            Text(weatherCondition, fontSize = 14.sp, color = Color.Gray)
+        }
+    }
+
+    @Composable
+    fun WeatherDetailCard(
+        weatherDetailItemDataList1: List<WeatherDetailCardItemData>,
+        weatherDetailItemDataList2: List<WeatherDetailCardItemData>
+    ) {
         Card(
             modifier = Modifier.fillMaxWidth().padding(10.dp).wrapContentHeight(), elevation = 10.dp
         ) {
@@ -282,8 +434,8 @@ class MainScreen : Screen {
                     modifier = Modifier.padding(10.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
 
-                ) {
-                    items(weatherDetailItemDataList1){itemData ->
+                    ) {
+                    items(weatherDetailItemDataList1) { itemData ->
                         WeatherDetailCardItem(itemData)
                     }
                 }
@@ -292,7 +444,7 @@ class MainScreen : Screen {
                     horizontalArrangement = Arrangement.SpaceBetween,
 
                     ) {
-                    items(weatherDetailItemDataList2){itemData ->
+                    items(weatherDetailItemDataList2) { itemData ->
                         WeatherDetailCardItem(itemData)
                     }
                 }
@@ -312,7 +464,7 @@ class MainScreen : Screen {
             KamelImage(
                 asyncPainterResource(weatherItemData.weatherIcon),
                 "",
-                modifier = Modifier.size(150.toDp()),
+                modifier = Modifier.size(90.toDp()),
                 contentScale = ContentScale.Crop,
                 colorFilter = ColorFilter.tint(ColorManager.Blue)
             )
@@ -330,6 +482,8 @@ class MainScreen : Screen {
 
         }
     }
+
+
 
 
 }

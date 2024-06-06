@@ -1,6 +1,8 @@
 package presentation
 
 import data.model.AirQuality
+import data.model.forecast.CityForecastModel
+import data.utils.DataResource
 
 data class WeatherUiState(
     val weatherCondition:String = "",
@@ -19,3 +21,7 @@ data class WeatherUiState(
     val airQualityIndex: Int =0,
     val dayStatus:String=""
     )
+
+data class WeatherForecastUiState(
+    val weatherForecastResource: DataResource<CityForecastModel> = DataResource.loading()
+)

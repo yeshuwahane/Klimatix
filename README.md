@@ -1,14 +1,20 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# WeatherApp
 
-* `/composeApp` is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - `commonMain` is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    `iosMain` would be the right folder for such calls.
+Application built using Compose for the UI, Koin for dependency injection, and Ktor for API integration. It showcases the current weather of a user-specified city, allows the user to change the city, and provides detailed information such as hourly weather forecasts, UV index, air quality index, and humidity levels.
 
-* `/iosApp` contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform, 
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+## Features
 
+- **Current Weather**: Displays the current weather conditions of the set city.
+- **City Selection**: Allows users to change the city and view the weather for the selected location.
+- **Hourly Forecast**: Shows the hourly weather forecast for the current day.
+- **Additional Details**: Provides information on UV index, air quality index, and humidity levels.
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## Technologies Used
+
+- **Kotlin**: Entirely developed using Kotlin.
+- **Compose**: Utilized for building the UI.
+- **Koin**: Used for dependency injection.
+- **Ktor**: Used for API integration.
+
+## Setup and Installation
+
