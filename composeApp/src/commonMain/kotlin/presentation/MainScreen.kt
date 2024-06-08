@@ -87,11 +87,13 @@ class MainScreen : Screen {
     @Composable
     override fun Content() {
         val mainViewModel = getScreenModel<MainViewModel>()
-        val uiState = mainViewModel.uiState.collectAsState()
-        val forecastUiState = mainViewModel.forecastUiState.collectAsState()
+        val uiState by mainViewModel.uiState.collectAsState()
+        val forecastUiState by mainViewModel.forecastUiState.collectAsState()
         val currentHour = mainViewModel.getLocalTime()
 
-        val snackbarHostState = remember { SnackbarHostState() }
+//        val man by mainViewModel.uiState.collectAsState()
+
+        val snackBar = remember { SnackbarHostState() }
         val scope = rememberCoroutineScope()
 
 
@@ -111,52 +113,51 @@ class MainScreen : Screen {
 
 
         LaunchedEffect(Unit) {
-//            mainViewModel.getWeather()
             mainViewModel.getForecast()
 
         }
 
 
-            Scaffold(
-                backgroundColor = Color.Transparent,   // Make the background transparent,
-                snackbarHost = {
-                    SnackbarHost(snackbarHostState)
-                }
-
-            ) { paddingValues ->
-
-                WeatherStaticCompose(
-                    paddingValues = paddingValues,
-                    onSearchCTA = {
-                        mainViewModel.setCity(it)
-                    },
-                    uvIndex = uiState.value.uvIndex,
-                    sunIcon = sunIcon,
-                    windIcon = windIcon,
-                    windSpeed = uiState.value.windKph,
-                    humidityIcon = humidityIcon,
-                    humidityPercent = uiState.value.humidity,
-                    airIcon = airIcon,
-                    airIndex = uiState.value.airQualityIndex,
-                    pressureIcon = pressureIcon,
-                    pressureMb = uiState.value.pressure_mb,
-                    visibilityIcon = visibilityIcon,
-                    visibilityKm = uiState.value.visibilityKm,
-                    locationName = uiState.value.cityName,
-                    dayStatus = mainViewModel.getTimeOfDay(currentHour),
-                    forecastDataResource = forecastUiState.value.weatherForecastResource,
-                    onSnackBarCTA = {
-                        scope.launch {
-                            snackbarHostState.showSnackbar(it)
-                        }
-                    },
-                    onRefreshCTA = {
-                        mainViewModel.getForecast()
-                    },
-                    currentHour = currentHour
-                )
-
+        Scaffold(
+            backgroundColor = Color.Transparent,   // Make the background transparent,
+            snackbarHost = {
+                SnackbarHost(snackBar)
             }
+
+        ) { paddingValues ->
+
+            WeatherStaticCompose(
+                paddingValues = paddingValues,
+                onSearchCTA = {
+                    mainViewModel.setCity(it)
+                },
+                uvIndex = uiState.uvIndex,
+                sunIcon = sunIcon,
+                windIcon = windIcon,
+                windSpeed = uiState.windKph,
+                humidityIcon = humidityIcon,
+                humidityPercent = uiState.humidity,
+                airIcon = airIcon,
+                airIndex = uiState.airQualityIndex,
+                pressureIcon = pressureIcon,
+                pressureMb = uiState.pressure_mb,
+                visibilityIcon = visibilityIcon,
+                visibilityKm = uiState.visibilityKm,
+                locationName = uiState.cityName,
+                dayStatus = mainViewModel.getTimeOfDay(currentHour),
+                forecastDataResource = forecastUiState.weatherForecastResource,
+                onSnackBarCTA = {
+                    scope.launch {
+                        snackBar.showSnackbar(it)
+                    }
+                },
+                onRefreshCTA = {
+                    mainViewModel.getForecast()
+                },
+                currentHour = currentHour
+            )
+
+        }
 
 
     }
@@ -180,7 +181,7 @@ class MainScreen : Screen {
         visibilityIcon: String,
         visibilityKm: Double,
         dayStatus: String,
-        currentHour:Int,
+        currentHour: Int,
         forecastDataResource: DataResource<CityForecastModel>,
         onSnackBarCTA: (String) -> Unit,
         onRefreshCTA: () -> Unit,
@@ -192,7 +193,7 @@ class MainScreen : Screen {
         val refreshing by remember { mutableStateOf(false) }
 
         val refreshState = rememberPullRefreshState(refreshing, onRefresh = {
-            Napier.d( "Pull to refresh() ")
+            Napier.d("Pull to refresh() ")
             onRefreshCTA.invoke()
         })
 
@@ -276,8 +277,8 @@ class MainScreen : Screen {
                 )
             }
 
-            if (forecastDataResource.isSuccess() && forecastDataResource.data?.current?.condition?.text?.isNotEmpty() == true){
-                Box(
+            if (forecastDataResource.isSuccess() && forecastDataResource.data?.current?.condition?.text?.isNotEmpty() == true) {
+                Row(
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth()
@@ -291,42 +292,58 @@ class MainScreen : Screen {
                             .padding(horizontal = 10.dp, vertical = 10.dp)
                     ) {
                         Text(
-                            text = forecastDataResource.data.current.tempC.toString() +"°",
+                            text = forecastDataResource.data.current.tempC.toString() + "°",
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             fontSize = 30.dp.toSp()
                         )
                         Text(
                             text = forecastDataResource.data.current.condition.text,
+                            maxLines = 2,
                             color = ColorManager.WhiteBlack,
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.dp.toSp()
                         )
                     }
+                    Spacer(modifier = Modifier.weight(1f))
                     KamelImage(
                         asyncPainterResource(Constant.IMG_BASE_URL + forecastDataResource.data.current.condition.icon),
-                        "",
+                        "forecast icon",
                         modifier = Modifier
                             .size(80.dp)
                             .padding(horizontal = 10.dp)
                             .graphicsLayer {
                                 translationX = vibration
-                            }
-                            .align(Alignment.TopEnd),
+                            },
                         contentScale = ContentScale.Crop
                     )
 
                 }
-            }else if (forecastDataResource.isLoading()){
+            } else if (forecastDataResource.isLoading()) {
                 WeatherCardShimmer()
-            }else if (forecastDataResource.isError()){
+            } else if (forecastDataResource.isError()) {
                 onSnackBarCTA.invoke(forecastDataResource.error?.message.toString())
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            if (forecastDataResource.isSuccess() && forecastDataResource.data?.forecast?.forecastday?.isNotEmpty() == true){
+
+            if (forecastDataResource.isLoading())
+            {
+                LazyRow(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(10) {
+                        ForecastItemsShimmer()
+                    }
+
+                }
+            } else if (forecastDataResource.isSuccess() && forecastDataResource.data?.forecast?.forecastday?.isNotEmpty() == true) {
+
                 LazyRow(
                     modifier = Modifier
                         .padding(16.dp)
@@ -335,38 +352,18 @@ class MainScreen : Screen {
                 ) {
                     items(forecastDataResource.data.forecast.forecastday.get(0).hour) { hourForecast ->
 
-                            WeatherCard(
-                                time = hourForecast.time.split(" ")[1],
-                                weatherIcon = hourForecast.condition.icon,
-                                temp = hourForecast.tempC.toString(),
-                                weatherCondition = hourForecast.condition.text,
-                                )
+                        WeatherCard(
+                            time = hourForecast.time.split(" ")[1],
+                            weatherIcon = hourForecast.condition.icon,
+                            temp = hourForecast.tempC.toString(),
+                            weatherCondition = hourForecast.condition.text,
+                        )
 
-
-
-
-
-                    }
-
-                }
-            } else if (forecastDataResource.isLoading()){
-
-                LazyRow(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(10){
-                        ForecastItemsShimmer()
                     }
 
                 }
 
             }
-
-
-
 
 
             Spacer(modifier = Modifier.weight(1f))
@@ -384,7 +381,7 @@ class MainScreen : Screen {
     }
 
     @Composable
-    fun WeatherCard(time: String, weatherIcon: String,temp: String,weatherCondition: String) {
+    fun WeatherCard(time: String, weatherIcon: String, temp: String, weatherCondition: String) {
         val infiniteTransition = rememberInfiniteTransition()
         val vibration by infiniteTransition.animateFloat(
             initialValue = 0f,
@@ -484,8 +481,6 @@ class MainScreen : Screen {
     }
 
 
-
-
 }
 
 
@@ -515,5 +510,6 @@ fun getAirQuality(index: Int): String = when (index) {
 data class WeatherDetailCardItemData(
     val weatherIcon: String, val conditionDes: String, val conditionName: String
 )
+
 
 
