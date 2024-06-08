@@ -6,9 +6,11 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,8 +60,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -162,7 +167,7 @@ class MainScreen : Screen {
 
     }
 
-    @OptIn(ExperimentalMaterialApi::class)
+    @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
     @Composable
     fun WeatherStaticCompose(
         paddingValues: PaddingValues,
@@ -188,6 +193,7 @@ class MainScreen : Screen {
     ) {
         var cityName by remember { mutableStateOf(TextFieldValue("")) }
         val focusManager = LocalFocusManager.current
+        val hapticFeedback = LocalHapticFeedback.current
         var showTextFeild by remember { mutableStateOf(false) }
 
         val refreshing by remember { mutableStateOf(false) }
@@ -286,6 +292,17 @@ class MainScreen : Screen {
                         .clip(RectangleShape)
                         .background(color = ColorManager.Blue, shape = RoundedCornerShape(10.dp))
                         .padding(16.dp)
+                        .combinedClickable(enabled = true, onLongClick = {
+                            onRefreshCTA.invoke()
+                            hapticFeedback.performHapticFeedback(hapticFeedbackType = HapticFeedbackType.LongPress)
+//                            onSnackBarCTA.invoke("Refreshing")
+                        },
+                            onLongClickLabel = "Long Click to Refresh",
+                        ){
+                            onSnackBarCTA.invoke("Long press to Refresh")
+                            hapticFeedback.performHapticFeedback(hapticFeedbackType = HapticFeedbackType.LongPress)
+
+                        }
                 ) {
                     Column(
                         modifier = Modifier
