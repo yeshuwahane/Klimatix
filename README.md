@@ -1,3 +1,10 @@
+
+
+![WeatherApp](https://raw.githubusercontent.com/yeshuwahane/WeatherAppCmm/main/screenshots/weatherApp.png)
+
+
+
+
 # WeatherApp
 
 Application built using Compose for the UI, Koin for dependency injection, and Ktor for API integration. It showcases the current weather of a user-specified city, allows the user to change the city, and provides detailed information such as hourly weather forecasts, UV index, air quality index, and humidity levels.
