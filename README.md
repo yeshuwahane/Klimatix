@@ -3,8 +3,10 @@
 ![WeatherApp](https://raw.githubusercontent.com/yeshuwahane/WeatherAppCmm/main/screenshots/weatherApp.png)
 
 
-Download Options 
-<a href="https://play.google.com/store/apps/details?id=org.yeshuwahane.weather"> Google PlayStore<a>
+Download Options: 
+#### <a href="https://play.google.com/store/apps/details?id=org.yeshuwahane.weather"> Google PlayStore<a>
+#### <a href="https://github.com/yeshuwahane/Klimatix/releases/tag/release"> Github Release<a>
+
 
 # WeatherApp
 
