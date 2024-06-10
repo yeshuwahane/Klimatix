@@ -10,7 +10,7 @@ Download Options:
 
 # Klimatix
 
-open-source weather app built entirely with Kotlin Multiplatform. It showcases the current weather of a user-specified city, allows the user to change the city, and provides detailed information such as hourly weather forecasts, UV index, air quality index, and humidity levels.
+open-source weather app built with Kotlin Multiplatform. It showcases the current weather of a user-specified city, allows the user to change the city, and provides detailed information such as hourly weather forecasts, UV index, air quality index, and humidity levels.
 
 ## Features
 
