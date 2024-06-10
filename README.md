@@ -8,9 +8,10 @@ Download Options:
 #### <a href="https://github.com/yeshuwahane/Klimatix/releases/tag/release"> Github Release<a>
 
 
-# WeatherApp
+# Klimatix
+## Kotlin Multiplatform
 
-Application built using Compose for the UI, Koin for dependency injection, and Ktor for API integration. It showcases the current weather of a user-specified city, allows the user to change the city, and provides detailed information such as hourly weather forecasts, UV index, air quality index, and humidity levels.
+Bukt using Compose for sharing UI across both platforms., Koin for dependency injection, and Ktor for API integration. It showcases the current weather of a user-specified city, allows the user to change the city, and provides detailed information such as hourly weather forecasts, UV index, air quality index, and humidity levels.
 
 ## Features
 
