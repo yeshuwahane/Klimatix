@@ -10,7 +10,7 @@ Download Options:
 
 # Klimatix
 
-open-source weather app built entirely with Kotlin Multiplatform , using Compose for sharing UI across both platforms, Koin for dependency injection, and Ktor for API integration. It showcases the current weather of a user-specified city, allows the user to change the city, and provides detailed information such as hourly weather forecasts, UV index, air quality index, and humidity levels.
+open-source weather app built entirely with Kotlin Multiplatform. It showcases the current weather of a user-specified city, allows the user to change the city, and provides detailed information such as hourly weather forecasts, UV index, air quality index, and humidity levels.
 
 ## Features
 
@@ -22,7 +22,7 @@ open-source weather app built entirely with Kotlin Multiplatform , using Compose
 ## Technologies Used
 
 - **Kotlin**: Entirely developed using Kotlin.
-- **Compose**: Utilized for building the UI.
+- **Compose**: Used for sharing UI across both platforms.
 - **Koin**: Used for dependency injection.
 - **Ktor**: Used for API integration.
 
