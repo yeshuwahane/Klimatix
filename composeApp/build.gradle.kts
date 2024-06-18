@@ -83,6 +83,10 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
 
+            //connectivity
+            implementation("com.plusmobileapps:konnectivity:0.1-alpha01")
+
+
         }
     }
 }

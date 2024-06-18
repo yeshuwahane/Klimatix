@@ -76,6 +76,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
+import com.plusmobileapps.konnectivity.Konnectivity
+import com.plusmobileapps.konnectivity.NetworkConnection
 import data.Constant
 import data.model.forecast.CityForecastModel
 import data.utils.DataResource
@@ -101,6 +103,8 @@ class MainScreen : Screen {
         val snackBar = remember { SnackbarHostState() }
         val scope = rememberCoroutineScope()
 
+        val konnectivity: Konnectivity = Konnectivity()
+
 
         val sunIcon =
             "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/star.png"
@@ -116,10 +120,31 @@ class MainScreen : Screen {
             "https://raw.githubusercontent.com/yeshuwahane/weatherImages/main/weather_images/visibility.png"
 
 
+        val isConnected: Boolean = konnectivity.isConnected
+
 
         LaunchedEffect(Unit) {
             mainViewModel.getForecast()
 
+        }
+
+        val networkConnection: NetworkConnection = konnectivity.currentNetworkConnection
+        when (networkConnection) {
+            NetworkConnection.NONE -> {
+                scope.launch {
+                    snackBar.showSnackbar("No Internet Connection")
+                }
+            }
+            NetworkConnection.WIFI -> {
+                scope.launch {
+                    snackBar.showSnackbar("Connected to wifi")
+                }
+            }
+            NetworkConnection.CELLULAR -> {
+                scope.launch {
+                    snackBar.showSnackbar("Connected to cellular")
+                }
+            }
         }
 
 
